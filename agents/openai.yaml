@@ -1,0 +1,4 @@
+interface:
+  display_name: "Meta Ad Library Video Scraper"
+  short_description: "Find and extract Meta Ad Library video ads from the web UI."
+  default_prompt: "Use this skill to search Meta Ad Library by keyword, filter for video ads, and extract ad copy, page names, delivery dates, source links, and candidate video URLs."

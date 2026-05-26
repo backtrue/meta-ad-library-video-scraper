@@ -57,16 +57,18 @@ mkdir -p ~/.codex/skills
 cp -R meta-ad-library-video-scraper ~/.codex/skills/
 ```
 
-## Optional Local Tools
+## Required / Allowed Local Tools
 
-For the full local workflow, install:
+For the full local workflow, use only the tools allowed by `SKILL.md`:
 
-- Node.js, for `scripts/build_ad_library_url.mjs`
+- browser capable of rendering Meta Ad Library pages
+- Node.js, only for `scripts/build_ad_library_url.mjs`
 - `yt-dlp`, for resolving and downloading Facebook/Ad Library videos
 - FFmpeg, for `ffprobe` video verification and frame/audio extraction
-- a speech-to-text tool such as Whisper, for transcript extraction
+- Python 3 with document-generation dependencies already available in the active runtime, such as `python-docx` and `Pillow`, when creating DOCX before Google Docs import
+- Google Drive / Google Docs tooling, when creating the final native Google Doc
 
-The skill can still guide analysis without every tool, but it must not claim a video was downloaded or verified unless the local file exists and has been checked.
+If one of these tools is missing, install only the missing allowlisted tool after the user or host environment allows it. Do not substitute SaaS scrapers, random GitHub projects, browser extensions, Meta Graph API, cookie export helpers, OCR/transcription services, or other tools unless the skill is explicitly updated before execution.
 
 ## Example Keyword URL
 
@@ -78,13 +80,13 @@ This creates a Taiwan video-only exact phrase Ad Library search URL for ads that
 
 ## Output Scope
 
-The first-version script analysis stops at:
+The first-version analysis is storyboard-first and stops at:
 
 1. video source
 2. video basics
 3. ad copy
-4. transcript
-5. visual timeline
+4. transcript status when available
+5. visual storyboard timeline
 6. on-screen text
 7. script structure classification
 
