@@ -1,4 +1,4 @@
 interface:
   display_name: "Meta Ad Library Video Scraper"
-  short_description: "Find and extract Meta Ad Library video ads from the web UI."
-  default_prompt: "Use this skill to search Meta Ad Library by keyword, filter for video ads, and extract ad copy, page names, delivery dates, source links, and candidate video URLs."
+  short_description: "Find Meta Ad Library short-video ads by same-industry keyword or Taiwan popular-inspiration keywords."
+  default_prompt: "Use this skill to run a storyboard-first Meta Ad Library video workflow. Choose same-industry analysis for a provided keyword, or popular-inspiration analysis to discover Taiwan-market keywords from Google Trends, Google Keyword Planner, and TikTok Creative Center before searching Meta Ad Library."

@@ -1,6 +1,6 @@
 ---
 name: meta-ad-library-video-scraper
-description: Use when Codex must run the fixed Meta/Facebook Ad Library video-ad workflow by keyword, running duration, or direct video URL. The skill searches Meta Ad Library web UI results, excludes the user's own brand, downloads only verified short videos, outputs first-version 1-7 script analysis, and finishes by creating a Google Docs deliverable without inventing replacement workflows.
+description: Use when Codex must run the fixed Meta/Facebook Ad Library video-ad workflow by same-industry keyword, popular Taiwan keyword discovery, running duration, or direct video URL. The skill searches Meta Ad Library web UI results, excludes the user's own brand, downloads only verified short videos, outputs storyboard-first script analysis, and finishes by creating a Google Docs deliverable without inventing replacement workflows.
 ---
 
 # Meta Ad Library Video Scraper
@@ -64,6 +64,15 @@ Before running, check whether the required tools are already available:
   Google Docs import
 - Google Drive / Google Docs tooling, when creating the final native Google Doc
 
+Optional tools for popular-inspiration keyword discovery:
+
+- Google Trends web UI for Taiwan trending search terms and relative search
+  interest
+- Google Keyword Planner for Taiwan keyword ideas and search volume ranges,
+  only when the account and permissions are already available
+- TikTok Creative Center for Taiwan short-video ad keywords, hashtags, and
+  trend pages, only when the page is available in the current environment
+
 If a required tool is missing:
 
 1. Do not switch to a different scraping, download, transcription, browser,
@@ -77,17 +86,39 @@ If a required tool is missing:
    helpers, or OCR/transcription services as substitutes unless this skill is
    explicitly updated before execution to allow them.
 
+## Analysis Modes
+
+Classify the user's request into exactly one analysis mode before choosing the
+entry type.
+
+- `same_industry_storyboard`: the user gives a specific keyword, product
+  category, industry, brand competitor, or direct URL and wants ads related to
+  that industry. This is the default for ordinary keyword searches.
+- `popular_inspiration_storyboard`: the user asks for popular ads, popular
+  short-video ideas, other-industry inspiration, or does not want to be limited
+  to the target industry. This mode discovers Taiwan-market search terms first,
+  then uses those terms to search Meta Ad Library.
+
+Do not merge these modes. Same-industry runs use Industry Relevance Filter.
+Popular-inspiration runs use Popular Inspiration Filter and must not exclude an
+ad merely because it is outside the target industry.
+
 ## Entry Types
 
 Start by classifying the user's request into exactly one entry type:
 
 - `keyword_search`: user gives a keyword and wants Meta Ad Library candidates.
+- `popular_keyword_discovery`: user wants popular Taiwan-market inspiration
+  and does not provide a final keyword list.
 - `ad_library_url`: user gives `facebook.com/ads/library/?id=<ID>`.
 - `facebook_video_url`: user gives Facebook watch, video, or Reels URL.
 - `temporary_media_url`: user gives `fbcdn.net` or another signed media URL.
 - `direct_video_url`: user gives a direct downloadable video URL.
 
 If the user gives a keyword search request, follow Keyword Search Workflow.
+If the user asks for popular inspiration without final keywords, follow Popular
+Keyword Discovery Workflow, then run Keyword Search Workflow once per approved
+keyword.
 If the user gives any URL, follow Direct URL Workflow.
 
 ## Required User Inputs
@@ -95,14 +126,25 @@ If the user gives any URL, follow Direct URL Workflow.
 Before keyword search or analysis, identify these values from the request:
 
 - keyword, for keyword search
+- analysis mode
 - country, default `TW` for Taiwan workflows
 - own brand name for exclusion
 - duration filter, if requested
 - short-video scope, default `<= 60` seconds
+- for popular-inspiration mode: Taiwan-market keyword source scope:
+  - `google_trends`
+  - `google_keyword_planner`
+  - `tiktok_creative_center`
 
 If own brand is missing, ask only for the own brand name. After the user
 answers, continue automatically. If the user says there is no own brand, record
 `none`.
+
+For popular-inspiration mode, if the user does not specify source scope, use
+only the three allowed Taiwan-market sources above. Do not add Google Search
+Console, YouTube Studio Trends, Pinterest Trends, Amazon Brand Analytics,
+Microsoft Keyword Planner, SEO tools, autocomplete scrapers, or third-party
+trend databases unless this skill is explicitly updated before execution.
 
 ## Duration Meaning
 
@@ -120,8 +162,8 @@ Do not reinterpret them.
 Follow these steps in order. Do not skip, reorder, or replace them.
 
 1. Confirm the entry type is `keyword_search`.
-2. Confirm the keyword, country, own brand exclusion, video-only scope, and
-   duration filter.
+2. Confirm the analysis mode, keyword, country, own brand exclusion,
+   video-only scope, and duration filter.
 3. Build the search URL with the URL builder:
 
    ```bash
@@ -157,7 +199,9 @@ Follow these steps in order. Do not skip, reorder, or replace them.
 18. Verify the saved file with `ffprobe`.
 19. If the verified file duration is `> 60`, mark `over_60s` and do not analyze.
 20. If the verified file duration is `<= 60`, run Short Video Script Analysis.
-21. Classify industry relevance before creating any external report.
+21. Classify report eligibility before creating any external report:
+    - for `same_industry_storyboard`, run Industry Relevance Filter
+    - for `popular_inspiration_storyboard`, run Popular Inspiration Filter
 22. Save outputs and a run summary.
 23. Create the final Google Docs deliverable.
 
@@ -170,6 +214,70 @@ Allowed real extraction methods for keyword search are only:
 - local audio/frame extraction from verified downloaded files
 
 No demo, mock, cached sample, or synthetic candidate may be introduced.
+
+## Popular Keyword Discovery Workflow
+
+Use this workflow only for `popular_inspiration_storyboard` when the user wants
+popular Taiwan-market inspiration and has not provided a final keyword list.
+
+The keyword-discovery stage only selects search terms to start Meta Ad Library
+searches. It does not prove that any later Meta ad is high-performing.
+
+Allowed keyword sources are only:
+
+- Google Trends for Taiwan trending searches, related searches, and relative
+  interest
+- Google Keyword Planner for Taiwan keyword ideas, average monthly searches,
+  competition, and bid ranges, only when available in the current account
+- TikTok Creative Center for Taiwan ad keyword insights, hashtags, songs,
+  creators, videos, and trend pages, only when available in the current
+  environment
+
+Disallowed keyword sources in this Taiwan workflow:
+
+- Google Search Console
+- YouTube Studio Trends
+- Pinterest Trends
+- Amazon Brand Analytics
+- Microsoft Keyword Planner
+- third-party SEO tools such as Ahrefs, Semrush, Ubersuggest, DataForSEO, or
+  browser extensions
+- invented seed lists that were not supplied by the user, the allowed source,
+  or a pre-approved project brief
+
+Follow these steps in order:
+
+1. Confirm the entry type is `popular_keyword_discovery` and the analysis mode
+   is `popular_inspiration_storyboard`.
+2. Confirm country is `TW`, unless the user explicitly chooses another market.
+3. Collect candidate terms from the allowed sources that are available:
+   - Google Trends: use Taiwan location, record trend title/query, timeframe,
+     relative interest or trend status when visible, and source URL/export.
+   - Google Keyword Planner: use Taiwan targeting, record keyword idea, search
+     volume range, competition, and source/account date when visible.
+   - TikTok Creative Center: use Taiwan region when available, record keyword,
+     hashtag, trend/video title, category/industry filter, and source URL.
+4. If none of the allowed sources are available or all return no usable terms,
+   stop and report the exact unavailable source or empty result. Do not invent
+   replacement keywords.
+5. Remove terms that are unsuitable as Meta Ad Library search starters:
+   - politics, elections, public-issue terms, public figures, scandals, or
+     news-only terms
+   - pure celebrity or entertainment terms with no product/service scenario
+   - terms that cannot reasonably lead to short commercial video ads
+   - terms blocked by the user's exclusions
+6. For each kept term, record:
+   - keyword
+   - keyword source (`Google Trends`, `Google Keyword Planner`, or
+     `TikTok Creative Center`)
+   - market (`TW` unless overridden)
+   - popularity evidence exactly as visible in the source
+   - why the term can start an Ad Library search
+7. Run Keyword Search Workflow once per kept keyword.
+8. Preserve keyword-source evidence for the final Google Docs report.
+
+Do not call these terms "proven popular ads". In the final report, call them
+`熱門詞來源` or `熱門代理訊號` only.
 
 ## Direct URL Workflow
 
@@ -279,7 +387,10 @@ points, scoring, or rewrite templates unless the user later asks for them.
 
 ## Industry Relevance Filter
 
-Keyword match alone is not enough for the external Google Docs report.
+Use this filter only for `same_industry_storyboard`.
+
+Keyword match alone is not enough for the external Google Docs report in
+same-industry mode.
 
 Before creating the final report, classify each downloaded/analyzed ad as either
 `industry_relevant` or `off_industry`.
@@ -307,6 +418,45 @@ not include their storyboard sections or candidate rows in the external Google
 Docs report. The external report summary may state the count excluded for
 off-industry mismatch, without listing local paths.
 
+## Popular Inspiration Filter
+
+Use this filter only for `popular_inspiration_storyboard`.
+
+Do not require same-industry relevance. The external report should include an
+ad when all of these are true:
+
+- it came from an allowed Taiwan-market keyword source or a user-approved
+  keyword
+- it is a verified Meta Ad Library video candidate
+- it is `<= 60` seconds after `ffprobe` verification
+- it has a durable Meta Ad Library source link or original source URL
+- its storyboard has a clear visual structure that can be analyzed
+
+Exclude from the external report ads that are not useful for storyboard
+inspiration, including:
+
+- political, public-issue, public figure, scandal, or news-only ads
+- pure entertainment clips with no commercial product/service scenario
+- ads that rely only on a celebrity, one-time event, meme, or brand asset that
+  cannot be evaluated through storyboard structure
+- videos whose source cannot be verified or downloaded through the allowed
+  methods
+- videos where no distinct visual/storyboard sequence can be extracted
+
+For every included ad, record why it was included using evidence available in
+the run, such as:
+
+- keyword source and popularity evidence
+- active or delivery/start date text from Meta Ad Library
+- long-running status from the duration filter
+- repeated visual/script pattern within the same page's candidates, if observed
+- clear storyboard mechanism such as problem opening, demo sequence, ritual
+  scenario, proof shot, offer card, testimonial beat, or CTA
+
+Do not state or imply that the ad has high spend, high reach, high conversions,
+or strong business performance unless that data was directly available from an
+allowed source.
+
 ## Final Google Docs Deliverable
 
 This is the final step of every successful run. Do not stop at local Markdown,
@@ -331,6 +481,8 @@ JSON, DOCX, or terminal output when Google Drive tooling is available.
      headings such as `Run summary`, `Candidate table`, `Per-ad storyboard`,
      `Evidence paths`, or `Sources`
    - Candidate table with one source link for every analyzed ad
+   - for popular-inspiration mode, `熱門詞來源` showing each searched keyword,
+     its allowed source, market, and popularity evidence
    - Per-ad storyboard sections
    - embedded representative frames in the `Frame` column when local frame
      files exist
@@ -384,7 +536,8 @@ order:
    - no raw transcript wall
    - Traditional Chinese user-facing wording
 2. `候選廣告表`: a supporting index of all downloaded/analyzed ads with Ad Library ID, page,
-   duration, script type, Meta Ad Library source link, and storyboard strategy.
+   keyword source when applicable, duration, script type, Meta Ad Library
+   source link, and storyboard strategy.
    Do not include local video paths or contact sheet paths in the external
    report.
    Supporting table text must be readable in Google Docs; use at least 9 pt for table
@@ -392,8 +545,13 @@ order:
    for a compact appendix format.
 3. `執行摘要`: supporting context only; keep it concise when the report is for
    external readers.
-4. `證據保存說明`: describe retained evidence categories without local paths.
-5. `資料來源`: include external source links used by the run.
+4. `熱門詞來源`: include this section only for `popular_inspiration_storyboard`.
+   List the searched keywords, source (`Google Trends`,
+   `Google Keyword Planner`, or `TikTok Creative Center`), market, visible
+   popularity evidence, and source link/export note. Do not include disallowed
+   sources or unsupported popularity claims.
+5. `證據保存說明`: describe retained evidence categories without local paths.
+6. `資料來源`: include external source links used by the run.
 
 The per-ad storyboard table must use this column set:
 
@@ -408,6 +566,10 @@ For each candidate ad:
 
 ```json
 {
+  "analysisMode": "same_industry_storyboard | popular_inspiration_storyboard",
+  "searchKeyword": "",
+  "keywordSource": "user_provided | Google Trends | Google Keyword Planner | TikTok Creative Center | not_applicable",
+  "keywordPopularityEvidence": "",
   "pageName": "",
   "excludedBrand": "",
   "brandMatchStatus": "included | excluded_self_brand | needs_brand_review",
@@ -428,6 +590,10 @@ For completed script analysis:
 
 ```json
 {
+  "analysisMode": "same_industry_storyboard | popular_inspiration_storyboard",
+  "searchKeyword": "",
+  "keywordSource": "user_provided | Google Trends | Google Keyword Planner | TikTok Creative Center | not_applicable",
+  "keywordPopularityEvidence": "",
   "sourceUrl": "",
   "sourceType": "ad_library_url | facebook_video_url | temporary_media_url | direct_video_url | keyword_discovery",
   "localVideoPath": "",

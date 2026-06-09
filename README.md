@@ -4,16 +4,31 @@ A portable Agent Skill for finding and analyzing short-form Meta/Facebook Ad Lib
 
 The skill supports:
 
-- keyword discovery in Meta Ad Library
+- same-industry keyword search in Meta Ad Library
+- Taiwan popular-inspiration keyword discovery before Meta Ad Library search
 - direct Ad Library URLs
 - Facebook video, Reels, and watch URLs
 - temporary `fbcdn.net` media URLs
 - direct MP4/video URLs
-- local video files
 - `<= 60s` short-video filtering
 - source preservation
 - `ffprobe` verification
 - transcript, frame, on-screen text, and script-structure analysis
+
+## Analysis Modes
+
+The skill has two separate workflows:
+
+- Same-industry storyboard analysis: use a provided keyword or URL, keep only ads relevant to the target industry, and produce a storyboard-first Google Docs report.
+- Popular short-video storyboard inspiration: discover Taiwan-market search terms first, then use those terms to search Meta Ad Library. This mode does not require ads to be in the target industry; it keeps ads that are useful for storyboard inspiration and have traceable keyword-source evidence.
+
+Popular-inspiration mode uses only these keyword sources:
+
+- Google Trends for Taiwan trending searches and relative interest
+- Google Keyword Planner for Taiwan keyword ideas and search volume ranges, only when account access is available
+- TikTok Creative Center for Taiwan ad keywords, hashtags, and short-video trends, only when the page is available
+
+Do not substitute Google Search Console, YouTube Studio Trends, Pinterest Trends, Amazon Brand Analytics, Microsoft Keyword Planner, third-party SEO tools, browser extensions, or invented seed lists unless the skill is explicitly updated first.
 
 ## Install in Claude Desktop or Claude Web
 
@@ -67,6 +82,7 @@ For the full local workflow, use only the tools allowed by `SKILL.md`:
 - FFmpeg, for `ffprobe` video verification and frame/audio extraction
 - Python 3 with document-generation dependencies already available in the active runtime, such as `python-docx` and `Pillow`, when creating DOCX before Google Docs import
 - Google Drive / Google Docs tooling, when creating the final native Google Doc
+- Google Trends web UI, Google Keyword Planner, and TikTok Creative Center only for popular-inspiration keyword discovery
 
 If one of these tools is missing, install only the missing allowlisted tool after the user or host environment allows it. Do not substitute SaaS scrapers, random GitHub projects, browser extensions, Meta Graph API, cookie export helpers, OCR/transcription services, or other tools unless the skill is explicitly updated before execution.
 
@@ -94,6 +110,12 @@ It intentionally does not output learning recommendations, scores, or rewrite te
 
 ## Sources
 
+- Meta Ad Library Help: https://www.facebook.com/help/259468828226154/
+- Google Trends Trending Now Help: https://support.google.com/trends/answer/3076011?hl=en
+- Google Trends data FAQ: https://support.google.com/trends/answer/4365533?hl=en
+- Google Keyword Planner Help: https://support.google.com/google-ads/answer/7337243?hl=EN-GB
+- TikTok Keyword Insights Help: https://ads.us.tiktok.com/help/article/keyword-insights
+- TikTok Trends Help: https://ads.us.tiktok.com/help/article/how-to-use-trends
 - Claude custom skills upload: https://support.claude.com/en/articles/12512180-using-skills-in-claude
 - Claude Code Agent Skills: https://docs.claude.com/en/docs/claude-code/skills
 - FFmpeg ffprobe documentation: https://ffmpeg.org/ffprobe.html
